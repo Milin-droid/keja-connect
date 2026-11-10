@@ -118,6 +118,7 @@ else:
 
 MEDIA_URL = os.environ.get('KEJACONNECT_MEDIA_URL', '/media/')
 MEDIA_ROOT = Path(os.environ.get('KEJACONNECT_MEDIA_ROOT', str(BASE_DIR)))
+CLOUDINARY_MEDIA_ENABLED = bool(os.environ.get('CLOUDINARY_URL'))
 
 if not DEBUG:
     if not SECRET_KEY:
@@ -128,9 +129,9 @@ if not DEBUG:
         raise ImproperlyConfigured('Set DATABASE_URL or KEJACONNECT_DB_PASSWORD for production.')
     if not DATABASES['default'].get('HOST') or DATABASES['default']['HOST'] == 'localhost':
         raise ImproperlyConfigured('Set DATABASE_URL or KEJACONNECT_DB_HOST for production.')
-    if not os.environ.get('KEJACONNECT_MEDIA_ROOT'):
+    if not CLOUDINARY_MEDIA_ENABLED and not os.environ.get('KEJACONNECT_MEDIA_ROOT'):
         raise ImproperlyConfigured(
-            'Set KEJACONNECT_MEDIA_ROOT to persistent storage for uploaded property photos.'
+            'Set CLOUDINARY_URL or KEJACONNECT_MEDIA_ROOT for persistent property photo storage.'
         )
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -149,7 +150,13 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 if not DEBUG:
     STORAGES = {
-        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'default': {
+            'BACKEND': (
+                'config.storage.CloudinaryMediaStorage'
+                if CLOUDINARY_MEDIA_ENABLED
+                else 'django.core.files.storage.FileSystemStorage'
+            ),
+        },
         'staticfiles': {
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
