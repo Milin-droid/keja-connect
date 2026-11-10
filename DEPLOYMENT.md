@@ -1,13 +1,21 @@
-# KejaConnect free Render hosting
+# KejaConnect hosting: Render + Neon + Cloudinary
 
-This Render Blueprint creates a free KejaConnect web service and uses the existing `elegance-salon-db` PostgreSQL instance, because Render permits only one active free Postgres database per workspace. KejaConnect tables are placed in a separate `keja_connect` schema; the salon app's tables remain in `public`.
+Render runs the existing Django website. Neon provides a separate PostgreSQL database, so KejaConnect does not use the salon database. Cloudinary stores landlord photos so they survive Render restarts.
 
-The database instance is shared, so both apps share its storage, connections, and free-tier expiration. Render free Postgres expires after 30 days. Render free web services sleep after 15 minutes without traffic and lose local uploads on restarts or redeploys. Property photos are temporary in this setup.
+## Prepare the free services
 
-## Deploy
+1. Create a free Neon PostgreSQL project and copy its connection string. Use Neon's pooled connection string if shown.
+2. Create a free Cloudinary account and copy the `CLOUDINARY_URL` from its API environment settings.
+3. Keep both values private. Enter them only in Render's Blueprint secret prompts; never commit them to GitHub or send them in chat.
 
-1. In the failed Blueprint's **Syncs** page, open the failed sync and choose **Manual sync** after the latest `render.yaml` update is pushed to GitHub.
-2. Confirm that the only resource to create is the `keja-connect` web service. It should reference the existing `elegance-salon-db` database and must not create another database.
-3. Wait for the service build and deploy to complete, then open its `.onrender.com` URL.
+## Create the Render service
 
-The build creates the `keja_connect` schema, applies Django migrations there, seeds the Kenya counties, and gathers static files. Do not paste the database connection URL into a public file or chat.
+The earlier failed Blueprint has no resources. Create a **new Blueprint instance** from `Milin-droid/keja-connect`, branch `main`, file `render.yaml`. Use a name such as `keja-connect-neon`.
+
+During its initial setup, Render prompts for `DATABASE_URL` and `CLOUDINARY_URL`. Paste the Neon connection string and Cloudinary URL into their matching prompts. The Blueprint creates one free web service and does not create or change a Render database.
+
+The build applies Django migrations, seeds the Kenya counties, and gathers static files. Render provides the HTTPS hostname and generated Django secret key.
+
+## Free-tier limits
+
+Render's free web service sleeps when idle. Neon and Cloudinary have their own free usage limits. This is suitable for a demo; monitor the providers' usage pages as activity grows.

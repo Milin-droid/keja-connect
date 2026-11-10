@@ -101,10 +101,6 @@ if database_url:
         conn_health_checks=True,
         ssl_require=not DEBUG,
     )
-    if not DEBUG:
-        database_config.setdefault('OPTIONS', {})['options'] = (
-            '-c search_path=keja_connect,public'
-        )
     DATABASES = {
         'default': database_config,
     }
