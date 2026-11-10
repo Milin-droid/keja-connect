@@ -95,13 +95,18 @@ database_url = os.environ.get('DATABASE_URL')
 if database_url:
     import dj_database_url
 
-    DATABASES = {
-        'default': dj_database_url.parse(
-            database_url,
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=not DEBUG,
+    database_config = dj_database_url.parse(
+        database_url,
+        conn_max_age=600,
+        conn_health_checks=True,
+        ssl_require=not DEBUG,
+    )
+    if not DEBUG:
+        database_config.setdefault('OPTIONS', {})['options'] = (
+            '-c search_path=keja_connect,public'
         )
+    DATABASES = {
+        'default': database_config,
     }
 else:
     DATABASES = {
