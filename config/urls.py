@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 from listings.views import public_property_browser, public_property_detail
 
 urlpatterns = [
@@ -36,3 +37,12 @@ if settings.DEBUG:
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
+elif not settings.CLOUDINARY_MEDIA_ENABLED:
+    # Demo only: Render free services have ephemeral local media storage.
+    urlpatterns += [
+        path(
+            'media/<path:path>',
+            serve,
+            {'document_root': settings.MEDIA_ROOT},
+        ),
+    ]
