@@ -1,0 +1,23 @@
+{% extends 'listings/base.html' %}
+{% load humanize %}
+{% block title %}{{ property.title }} — KejaConnect{% endblock %}
+{% block content %}
+<section class="detail-page">
+  <a class="back-link" href="{% url 'property-browser' %}">← Back to available places</a>
+  <div class="detail-heading"><div><span class="eyebrow">{{ property.get_category_display }} · {{ property.get_property_type_display }}</span><h1>{{ property.title }}</h1><p class="property-location"><span aria-hidden="true">⌖</span> {% if property.neighbourhood %}{{ property.neighbourhood.name }}, {% endif %}{{ property.town.name }}, {{ property.county.name }}</p></div><div class="detail-rent"><strong>KSh {{ property.monthly_rent|floatformat:0|intcomma }}</strong><span>per month</span></div></div>
+  <div class="detail-gallery {% if property.images.count == 1 %}gallery-single{% endif %}">
+    {% for image in property.images.all %}<img src="{{ image.image.url }}" alt="{{ property.title }} photo {{ forloop.counter }}" {% if not forloop.first %}loading="lazy"{% endif %}>{% empty %}<div class="image-placeholder detail-placeholder"><span>KEJACONNECT</span><strong>{{ property.get_category_display }}</strong></div>{% endfor %}
+  </div>
+  <div class="detail-columns"><article class="detail-main"><h2>About this place</h2><p class="description">{{ property.description|linebreaksbr }}</p><h2>At a glance</h2><div class="feature-grid">{% if property.bedrooms %}<div><small>Bedrooms</small><strong>{{ property.bedrooms }}</strong></div>{% endif %}{% if property.bathrooms %}<div><small>Bathrooms</small><strong>{{ property.bathrooms }}</strong></div>{% endif %}{% if property.floor_area_sq_m %}<div><small>Floor area</small><strong>{{ property.floor_area_sq_m|floatformat:0 }} m²</strong></div>{% endif %}<div><small>Availability</small><strong>Available now</strong></div></div></article>
+    <aside class="cost-card"><span class="eyebrow">MOVE-IN COSTS</span><h2>Plan your move</h2><div class="cost-row"><span>Monthly rent</span><strong>KSh {{ property.monthly_rent|floatformat:0|intcomma }}</strong></div><div class="cost-row"><span>Security deposit</span><strong>KSh {{ property.security_deposit|floatformat:0|intcomma }}</strong></div>{% if property.agency_fee %}<div class="cost-row"><span>Agency fee</span><strong>KSh {{ property.agency_fee|floatformat:0|intcomma }}</strong></div>{% endif %}{% if property.other_charges %}<div class="cost-row"><span>Other charges</span><strong>KSh {{ property.other_charges|floatformat:0|intcomma }}</strong></div>{% endif %}<div class="cost-total"><span>Estimated total to move in</span><strong>KSh {{ property.total_move_in_cost|floatformat:0|intcomma }}</strong></div><p class="cost-note">Contact the advertiser to confirm current availability and payment details.</p>
+      <div class="enquiry-box" id="enquiry-form"><h2>Interested in this place?</h2><p>Send a short enquiry and the landlord will call you back.</p>
+      {% if request.user.is_authenticated %}
+        {% if request.user.role == 'seeker' or request.user.role == 'both' %}
+          {% if request.user.id != property.owner_id %}<form method="post" class="stack-form enquiry-form">{% csrf_token %}{% if enquiry_form.non_field_errors %}<div class="form-errors">{{ enquiry_form.non_field_errors }}</div>{% endif %}{% for field in enquiry_form %}<div class="form-field"><label for="{{ field.id_for_label }}">{% if field.name == 'contact_phone' %}Phone number for the landlord to reach you{% else %}{{ field.label }}{% endif %}</label>{{ field }}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>{% endfor %}<button class="button button-dark form-submit" type="submit">Send enquiry</button></form>{% else %}<p class="muted-note">This is your listing.</p>{% endif %}
+        {% else %}<p class="muted-note">Sign in with a seeker account to enquire about this place.</p>{% endif %}
+      {% else %}<a class="button button-dark form-submit" href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}%23enquiry-form">Sign in to enquire</a><p class="account-switch">New to KejaConnect? <a href="{% url 'accounts:signup' %}?next={{ request.get_full_path|urlencode }}%23enquiry-form">Create an account</a></p>{% endif %}
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

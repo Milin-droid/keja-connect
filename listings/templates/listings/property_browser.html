@@ -1,0 +1,87 @@
+{% extends 'listings/base.html' %}
+{% load humanize %}
+{% block title %}Find rentals across Kenya — KejaConnect{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow"><span class="eyebrow-dot"></span> YOUR NEXT CHAPTER STARTS HERE</span>
+    <h1>A place that feels<br><em>like yours.</em></h1>
+    <p>Explore available homes and commercial spaces across Kenya, all in one place.</p>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <div class="sun"></div><div class="hill hill-back"></div><div class="hill hill-front"></div>
+    <div class="house"><div class="roof"></div><div class="house-body"><span class="window window-one"></span><span class="window window-two"></span><span class="door"></span></div></div>
+    <div class="plant plant-one">✦</div><div class="plant plant-two">✦</div>
+    <span class="art-caption">A little more room to grow.</span>
+  </div>
+</section>
+
+<section class="search-wrap" aria-label="Search available properties">
+  <form class="search-form" method="get" action="{% url 'property-browser' %}">
+    <div class="search-field search-location">
+      <label for="q">Location or keyword</label>
+      <input id="q" name="q" type="search" value="{{ filters.q }}" placeholder="Try Kilimani, Mombasa…">
+    </div>
+    <div class="search-field">
+      <label for="category">Property category</label>
+      <select id="category" name="category">
+        <option value="">All categories</option>
+        {% for value, label in categories %}<option value="{{ value }}" {% if filters.category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="search-field">
+      <label for="county">County</label>
+      <select id="county" name="county">
+        <option value="">All counties</option>
+        {% for county in counties %}<option value="{{ county.id }}" {% if filters.county == county.id|stringformat:'s' %}selected{% endif %}>{{ county.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="button button-dark search-button" type="submit"><span aria-hidden="true">⌕</span> Search homes</button>
+    <div class="advanced-filters">
+      <label class="search-field" for="property_type"><span>Property type</span>
+        <select id="property_type" name="property_type"><option value="">Any type</option>{% for value, label in property_types %}<option value="{{ value }}" {% if filters.property_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+      </label>
+      <label class="search-field" for="town"><span>Town</span>
+        <select id="town" name="town"><option value="">All towns</option>{% for town in towns %}<option value="{{ town.id }}" data-county="{{ town.county_id }}" {% if filters.town == town.id|stringformat:'s' %}selected{% endif %}>{{ town.name }} — {{ town.county.name }}</option>{% endfor %}</select>
+      </label>
+      <label class="search-field" for="neighbourhood"><span>Neighbourhood</span>
+        <select id="neighbourhood" name="neighbourhood"><option value="">All neighbourhoods</option>{% for neighbourhood in neighbourhoods %}<option value="{{ neighbourhood.id }}" data-town="{{ neighbourhood.town_id }}" {% if filters.neighbourhood == neighbourhood.id|stringformat:'s' %}selected{% endif %}>{{ neighbourhood.name }} — {{ neighbourhood.town.name }}</option>{% endfor %}</select>
+      </label>
+      <label class="search-field" for="bedrooms"><span>Bedrooms</span>
+        <select id="bedrooms" name="bedrooms"><option value="">Any</option><option value="1" {% if filters.bedrooms == '1' %}selected{% endif %}>1 bedroom</option><option value="2" {% if filters.bedrooms == '2' %}selected{% endif %}>2 bedrooms</option><option value="3" {% if filters.bedrooms == '3' %}selected{% endif %}>3 bedrooms</option><option value="4+" {% if filters.bedrooms == '4+' %}selected{% endif %}>4+ bedrooms</option></select>
+      </label>
+      <label class="search-field" for="min_rent"><span>Min rent (KSh/month)</span><input id="min_rent" name="min_rent" inputmode="numeric" type="number" min="0" value="{{ filters.min_rent }}" placeholder="0"></label>
+      <label class="search-field" for="max_rent"><span>Max rent (KSh/month)</span><input id="max_rent" name="max_rent" inputmode="numeric" type="number" min="0" value="{{ filters.max_rent }}" placeholder="Any"></label>
+    </div>
+  </form>
+</section>
+
+<section class="listing-section">
+  <div class="section-heading">
+    <div><span class="eyebrow">HANDPICKED FOR YOUR SEARCH</span><h2>Places to call home</h2></div>
+    <span class="result-count">{{ properties|length }} available {% if properties|length == 1 %}place{% else %}places{% endif %}</span>
+  </div>
+  {% if properties %}
+  <div class="property-grid">
+    {% for property in properties %}
+    <article class="property-card">
+      <a class="property-image" href="{% url 'website-property-detail' property.pk %}" aria-label="View {{ property.title }}">
+        {% with image=property.images.all|first %}{% if image %}<img src="{{ image.image.url }}" alt="{{ property.title }}" loading="lazy">{% else %}<div class="image-placeholder"><span>KEJACONNECT</span><strong>{{ property.get_category_display }}</strong></div>{% endif %}{% endwith %}
+        <span class="image-tag">{{ property.get_category_display }}</span>
+      </a>
+      <div class="property-info">
+        <div class="property-title-row"><h3><a href="{% url 'website-property-detail' property.pk %}">{{ property.title }}</a></h3><span class="type-tag">{{ property.get_property_type_display }}</span></div>
+        <p class="property-location"><span aria-hidden="true">⌖</span> {% if property.neighbourhood %}{{ property.neighbourhood.name }}, {% endif %}{{ property.town.name }}, {{ property.county.name }}</p>
+        <div class="property-meta">{% if property.bedrooms %}<span>{{ property.bedrooms }} bed{% if property.bedrooms != 1 %}s{% endif %}</span>{% endif %}{% if property.bathrooms %}<span>{{ property.bathrooms }} bath{% if property.bathrooms != 1 %}s{% endif %}</span>{% endif %}{% if property.floor_area_sq_m %}<span>{{ property.floor_area_sq_m|floatformat:0 }} m²</span>{% endif %}</div>
+        <div class="property-price"><strong>KSh {{ property.monthly_rent|floatformat:0|intcomma }}</strong><span>/ month</span></div>
+        <a class="card-link" href="{% url 'website-property-detail' property.pk %}">View property <span aria-hidden="true">↗</span></a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><div class="empty-icon">⌂</div><h3>No places match those filters yet</h3><p>Try another location or widen your rent range. New listings are added regularly.</p><a class="button button-outline" href="{% url 'property-browser' %}">Clear filters</a></div>
+  {% endif %}
+</section>
+<section class="trust-strip"><div><span class="trust-icon">✓</span><span><strong>Reviewed listings</strong><small>Every listing is checked before publishing.</small></span></div><div><span class="trust-icon">⌖</span><span><strong>Kenya, neighbourhood by neighbourhood</strong><small>Search by county, town or estate.</small></span></div><div><span class="trust-icon">♡</span><span><strong>Talk directly</strong><small>Enquire and landlords call you back.</small></span></div></section>
+{% endblock %}

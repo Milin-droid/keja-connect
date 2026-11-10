@@ -1,0 +1,9 @@
+{% extends 'listings/base.html' %}
+{% load humanize %}
+{% block title %}My enquiries — KejaConnect{% endblock %}
+{% block content %}
+<section class="dashboard-page">
+  <div class="dashboard-heading"><div><span class="eyebrow">YOUR KEJACONNECT ACCOUNT</span><h1>My enquiries</h1><p>Keep track of the places you’ve asked about. Landlords will call the number you shared.</p></div><a class="button button-outline" href="{% url 'property-browser' %}">Browse homes</a></div>
+  {% if enquiries %}<div class="enquiry-list">{% for enquiry in enquiries %}<article class="enquiry-card"><div class="enquiry-card-head"><div><span class="status-pill status-{{ enquiry.status }}">{{ enquiry.get_status_display }}</span><h2><a href="{% url 'website-property-detail' enquiry.property_id %}">{{ enquiry.property.title }}</a></h2><p class="property-location">{{ enquiry.property.town.name }}, {{ enquiry.property.county.name }}</p></div><time>{{ enquiry.created_at|date:'j M Y' }}</time></div><p class="enquiry-message">{{ enquiry.message }}</p><div class="enquiry-contact">Callback number: <strong>{{ enquiry.contact_phone }}</strong></div></article>{% endfor %}</div>{% else %}<div class="empty-state"><div class="empty-icon">⌂</div><h3>No enquiries yet</h3><p>When you find a place you like, send the landlord an enquiry and a phone number where they can reach you.</p><a class="button button-dark" href="{% url 'property-browser' %}">Explore available places</a></div>{% endif %}
+</section>
+{% endblock %}

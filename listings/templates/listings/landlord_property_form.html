@@ -1,0 +1,15 @@
+{% extends 'listings/base.html' %}
+{% block title %}{% if is_new %}Add a property{% else %}Manage {{ property.title }}{% endif %} — KejaConnect{% endblock %}
+{% block content %}
+<section class="dashboard-page narrow-dashboard">
+  <a class="back-link" href="{% url 'listings:landlord-dashboard' %}">← Back to your properties</a>
+  <div class="dashboard-heading"><div><span class="eyebrow">LANDLORD WORKSPACE</span><h1>{% if is_new %}Add a property{% else %}Manage your listing{% endif %}</h1><p>Accurate details help seekers decide whether a place is right for them.</p></div></div>
+  <form method="post" class="property-form">{% csrf_token %}{% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="property-form-grid">{% for field in form %}<div class="form-field {% if field.name == 'description' %}field-wide{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<small class="field-error">{{ error }}</small>{% endfor %}</div>{% endfor %}</div>
+    <div class="form-actions"><button class="button button-dark" type="submit">{% if is_new %}Save and submit for review{% else %}Save changes and resubmit for review{% endif %}</button><a class="text-link" href="{% url 'listings:landlord-dashboard' %}">Cancel</a></div>
+  </form>
+  {% if not is_new %}<section class="image-manager"><div class="dashboard-subheading"><h2>Property photos</h2><p>Upload clear photos up to 5 MB. Mark one as the main photo.</p></div><form class="image-upload-form" method="post" enctype="multipart/form-data" action="{% url 'listings:landlord-image-upload' property.pk %}">{% csrf_token %}<div class="form-field"><label for="id_image">Photo</label><input id="id_image" type="file" name="image" accept="image/*" required></div><label class="checkbox-field"><input type="checkbox" name="is_primary"> Set as main photo</label><button class="button button-outline" type="submit">Upload photo</button></form>
+    {% if property.images.all %}<div class="image-manager-grid">{% for image in property.images.all %}<div class="managed-image"> <img src="{{ image.image.url }}" alt="Photo of {{ property.title }}">{% if image.is_primary %}<span class="main-photo-tag">Main photo</span>{% endif %}<form method="post" action="{% url 'listings:landlord-image-delete' image.pk %}">{% csrf_token %}<button type="submit" aria-label="Remove photo">Remove</button></form></div>{% endfor %}</div>{% else %}<p class="muted-note">No photos uploaded yet.</p>{% endif %}
+  </section><form class="delete-listing-form" method="post" action="{% url 'listings:landlord-property-delete' property.pk %}" onsubmit="return confirm('Delete this listing and its enquiries? This cannot be undone.');">{% csrf_token %}<button type="submit" class="text-danger">Delete this listing</button></form>{% endif %}
+</section>
+{% endblock %}
